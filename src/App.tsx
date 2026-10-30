@@ -52,6 +52,10 @@ import { GoogleGenAI } from "@google/genai";
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Topic, Note, AppData, MindmapNode } from './types';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { IntroShowcase } from './components/IntroShowcase';
+import { LoginForm } from './components/LoginForm';
+import { Home } from 'lucide-react';
 
 const remarkListBullet = () => {
   return (tree: any) => {
@@ -180,6 +184,11 @@ function cn(...inputs: ClassValue[]) {
 }
 
 export default function App() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(() => localStorage.getItem('currentUser') || 'xu4ns0n');
+
   const [data, setData] = useState<AppData>({ topics: [], notes: [] });
   const [toasts, setToasts] = useState<{ id: string; message: string; type: 'success' | 'error' | 'info' }[]>([]);
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
@@ -207,6 +216,18 @@ export default function App() {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'plans' | 'tree' | 'stats'>('plans');
+
+  // Sync tab with URL route
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === '/tree') {
+      setActiveTab('tree');
+    } else if (path === '/stats') {
+      setActiveTab('stats');
+    } else if (path === '/plans') {
+      setActiveTab('plans');
+    }
+  }, [location.pathname]);
   const [editorViewMode, setEditorViewMode] = useState<'edit' | 'preview' | 'split'>('edit');
   const [activePopover, setActivePopover] = useState<'color' | 'emoji' | null>(null);
   const [renamingNoteId, setRenamingNoteId] = useState<string | null>(null);
@@ -1188,9 +1209,11 @@ export default function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('currentUser');
     setIsLoggedIn(false);
     setLoginUsername('');
     setLoginPassword('');
+    navigate('/intro');
   };
 
   const handleRenameNote = (noteId: string) => {
@@ -1632,87 +1655,34 @@ export default function App() {
     );
   }
 
-  if (!isLoggedIn) {
+  // Intro Showcase Route & Protected Access
+  if (location.pathname === '/' || location.pathname === '/intro' || !isLoggedIn) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-[#F8F9FA] dark:bg-[#020617] text-black dark:text-white p-4 relative overflow-hidden">
-        {/* Soft background glows */}
-        <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] rounded-full bg-emerald-500/5 dark:bg-emerald-500/10 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] rounded-full bg-black/5 dark:bg-slate-800/10 blur-[120px] pointer-events-none" />
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="w-full max-w-md bg-white dark:bg-slate-900 border border-black/5 dark:border-white/5 p-8 rounded-3xl shadow-xl shadow-black/[0.02] flex flex-col gap-6"
-        >
-          <div className="flex flex-col items-center gap-3 text-center">
-            <div className="w-14 h-14 bg-black dark:bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-black/10">
-              <NotebookPen className="w-7 h-7 text-white dark:text-black" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-black tracking-tight text-black dark:text-white">Make your plan</h2>
-              <p className="text-black/40 dark:text-white/40 text-xs mt-1">Vui lòng đăng nhập để bắt đầu lập kế hoạch</p>
-            </div>
-          </div>
- 
-          <form onSubmit={handleLogin} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-black/40 dark:text-white/45">Tên đăng nhập</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  required
-                  value={loginUsername}
-                  onChange={e => setLoginUsername(e.target.value)}
-                  placeholder="Nhập tên đăng nhập..."
-                  className="w-full bg-black/5 dark:bg-white/5 border border-transparent rounded-xl pl-10 pr-4 py-3 text-sm text-black dark:text-white placeholder:text-black/20 dark:placeholder:text-white/20 focus:outline-none focus:bg-white dark:focus:bg-slate-800 focus:border-black/10 dark:focus:border-white/10 focus:ring-1 focus:ring-black/10 dark:focus:ring-white/10 transition-all"
-                />
-                <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-black/30 dark:text-white/30" />
-              </div>
-            </div>
- 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-black/40 dark:text-white/45">Mật khẩu</label>
-              <div className="relative">
-                <input
-                  type="password"
-                  required
-                  value={loginPassword}
-                  onChange={e => setLoginPassword(e.target.value)}
-                  placeholder="Nhập mật khẩu..."
-                  className="w-full bg-black/5 dark:bg-white/5 border border-transparent rounded-xl pl-10 pr-4 py-3 text-sm text-black dark:text-white placeholder:text-black/20 dark:placeholder:text-white/20 focus:outline-none focus:bg-white dark:focus:bg-slate-800 focus:border-black/10 dark:focus:border-white/10 focus:ring-1 focus:ring-black/10 dark:focus:ring-white/10 transition-all"
-                />
-                <Settings className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-black/30 dark:text-white/30" />
-              </div>
-            </div>
- 
-            {loginError && (
-              <motion.div 
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-red-600 dark:text-red-400 text-xs text-center font-medium bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 py-2.5 px-3 rounded-xl"
-              >
-                {loginError}
-              </motion.div>
-            )}
- 
-            <button
-              type="submit"
-              disabled={isLoggingIn}
-              className="w-full bg-black dark:bg-white hover:bg-black/90 dark:hover:bg-white/90 disabled:bg-black/40 dark:disabled:bg-white/45 text-white dark:text-black py-3 rounded-xl text-sm font-bold shadow-lg shadow-black/10 dark:shadow-white/5 transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99]"
-            >
-              {isLoggingIn ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin text-white dark:text-black" />
-                  Đang xác thực...
-                </>
-              ) : (
-                'Đăng nhập'
-              )}
-            </button>
-          </form>
-        </motion.div>
-      </div>
+      <>
+        <IntroShowcase 
+          onEnterApp={(targetTab = 'plans') => {
+            if (!isLoggedIn) {
+              setIsLoginModalOpen(true);
+            } else {
+              navigate(`/${targetTab}`);
+            }
+          }}
+          onOpenLogin={() => setIsLoginModalOpen(true)}
+          isLoggedIn={isLoggedIn}
+          currentUser={currentUser}
+        />
+
+        <LoginForm 
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+          onLoginSuccess={(user) => {
+            setIsLoggedIn(true);
+            setCurrentUser(user);
+            const nextPath = (location.pathname === '/' || location.pathname === '/intro') ? '/plans' : location.pathname;
+            navigate(nextPath);
+          }}
+        />
+      </>
     );
   }
 
@@ -1741,12 +1711,24 @@ export default function App() {
       <nav className="w-16 border-r border-black/5 dark:border-r-white/5 bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-between py-6 shrink-0 z-25 select-none">
         {/* Top Navigation Icons */}
         <div className="flex flex-col items-center gap-4 w-full">
-          <div className="w-9 h-9 bg-black dark:bg-white rounded-xl flex items-center justify-center mb-4 shadow-sm">
+          <div 
+            onClick={() => navigate('/intro')}
+            className="w-9 h-9 bg-black dark:bg-white rounded-xl flex items-center justify-center mb-1 shadow-sm cursor-pointer hover:scale-110 hover:shadow-emerald-500/20 transition-all"
+            title="Về Trang Giới Thiệu 3D (Showcase)"
+          >
             <NotebookPen className="w-5 h-5 text-white dark:text-black" />
           </div>
+
+          <button
+            onClick={() => navigate('/intro')}
+            className="w-11 h-11 rounded-xl flex items-center justify-center text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer mb-2"
+            title="Trang giới thiệu 3D (Showcase)"
+          >
+            <Home className="w-5 h-5" />
+          </button>
           
           <button
-            onClick={() => setActiveTab('plans')}
+            onClick={() => { setActiveTab('plans'); navigate('/plans'); }}
             className={cn(
               "w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer",
               activeTab === 'plans' 
@@ -1759,7 +1741,7 @@ export default function App() {
           </button>
 
           <button
-            onClick={() => setActiveTab('tree')}
+            onClick={() => { setActiveTab('tree'); navigate('/tree'); }}
             className={cn(
               "w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer",
               activeTab === 'tree' 
@@ -1772,7 +1754,7 @@ export default function App() {
           </button>
 
           <button
-            onClick={() => setActiveTab('stats')}
+            onClick={() => { setActiveTab('stats'); navigate('/stats'); }}
             className={cn(
               "w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer",
               activeTab === 'stats' 
@@ -1816,9 +1798,9 @@ export default function App() {
           {/* User Profile Avatar */}
           <div 
             className="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-xs shadow-sm select-none"
-            title="Tài khoản: xu4ns0n"
+            title={`Tài khoản: ${currentUser}`}
           >
-            XS
+            {currentUser ? currentUser.slice(0, 2).toUpperCase() : 'XS'}
           </div>
           
           <button 
@@ -3626,6 +3608,14 @@ export default function App() {
           })}
         </AnimatePresence>
       </div>
+      <LoginForm 
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onLoginSuccess={(user) => {
+          setIsLoggedIn(true);
+          setCurrentUser(user);
+        }}
+      />
     </div>
   );
 }

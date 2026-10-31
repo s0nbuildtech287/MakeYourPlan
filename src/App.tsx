@@ -188,7 +188,12 @@ export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('isLoggedIn') === 'true');
   const [currentUser, setCurrentUser] = useState(() => localStorage.getItem('currentUser') || 'xu4ns0n');
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const [data, setData] = useState<AppData>(() => {
     try {
@@ -1112,31 +1117,9 @@ export default function App() {
     };
   }, [isResizing, resize, stopResizing]);
 
-    // Shortcut Ctrl+S để lưu và kiểm tra quyền
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-        e.preventDefault();
-        if (isEditing) {
-          handleUpdateNote();
-        } else if (!isLoggedIn) {
-          showToast('Vui lòng đăng nhập để lưu kế hoạch!', 'error');
-          setIsLoginModalOpen(true);
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isEditing, isLoggedIn, editNote, selectedNoteId, data]);
-
   const STORAGE_KEY = 'prompt_notepad_data';
 
-  // Login states
-  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('isLoggedIn') === 'true');
-  const [loginUsername, setLoginUsername] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  // Login states already declared at top of App
 
   // JSON File input ref
   const fileInputJsonRef = React.useRef<HTMLInputElement>(null);
@@ -1473,6 +1456,23 @@ export default function App() {
     setIsEditing(false);
     showToast('Đã lưu kế hoạch thành công!', 'success');
   };
+
+  // Shortcut Ctrl+S để lưu và kiểm tra quyền
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        if (isEditing) {
+          handleUpdateNote();
+        } else if (!isLoggedIn) {
+          showToast('Vui lòng đăng nhập để lưu kế hoạch!', 'error');
+          setIsLoginModalOpen(true);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isEditing, isLoggedIn, editNote, selectedNoteId, data]);
 
   const handleDownload = () => {
     if (!activeNote) return;

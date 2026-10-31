@@ -174,3 +174,4 @@ export const INITIAL_MOCK_DATA: AppData = {
     }
   ]
 };
+

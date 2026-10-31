@@ -56,7 +56,7 @@ import { INITIAL_MOCK_DATA } from './mockData';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { IntroShowcase } from './components/IntroShowcase';
 import { LoginForm } from './components/LoginForm';
-import { Home } from 'lucide-react';
+import { Home, LogIn } from 'lucide-react';
 
 const remarkListBullet = () => {
   return (tree: any) => {

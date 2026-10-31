@@ -53,6 +53,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Topic, Note, AppData, MindmapNode } from './types';
 import { INITIAL_MOCK_DATA } from './mockData';
+import { fetchCloudData, saveCloudData } from './api/syncClient';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { IntroShowcase } from './components/IntroShowcase';
 import { LoginForm } from './components/LoginForm';
@@ -303,12 +304,8 @@ export default function App() {
       const newData = { ...prev, mindmapNodes: mergedNodes };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
       
-      // Async save to backend
-      fetch('/api/data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newData),
-      }).catch(err => console.error(err));
+      // Async save to backend or Google Sheet
+      saveCloudData(newData).catch(err => console.error(err));
       
       return newData;
     });
@@ -1428,16 +1425,10 @@ export default function App() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
     setData(newData);
 
-    // 2. Sync with backend (Asynchronous)
-    try {
-      await fetch('/api/data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newData),
-      });
-    } catch (err) {
-      console.warn('Failed to sync with backend, but data is saved locally.', err);
-    }
+    // 2. Sync with backend or Google Sheet (Asynchronous Cloud Sync)
+    saveCloudData(newData).catch(err => {
+      console.warn('Cloud sync error, data is safely saved in LocalStorage.', err);
+    });
   };
 
   const toggleTopic = (id: string) => {

@@ -170,11 +170,8 @@ export const IntroShowcase: React.FC<IntroShowcaseProps> = ({
   };
 
   const handleProtectedAction = (tabName: string) => {
-    if (!isLoggedIn) {
-      onOpenLogin();
-    } else {
-      onEnterApp(tabName);
-    }
+    // Cho phép người dùng vào thẳng trải nghiệm web và khám phá mockdata mượt mà
+    onEnterApp(tabName);
   };
 
   return (

@@ -52,6 +52,7 @@ import { GoogleGenAI } from "@google/genai";
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Topic, Note, AppData, MindmapNode } from './types';
+import { INITIAL_MOCK_DATA } from './mockData';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { IntroShowcase } from './components/IntroShowcase';
 import { LoginForm } from './components/LoginForm';
@@ -189,7 +190,16 @@ export default function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(() => localStorage.getItem('currentUser') || 'xu4ns0n');
 
-  const [data, setData] = useState<AppData>({ topics: [], notes: [] });
+  const [data, setData] = useState<AppData>(() => {
+    try {
+      const local = localStorage.getItem('prompt_notepad_data');
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (parsed.topics && parsed.topics.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return INITIAL_MOCK_DATA;
+  });
   const [toasts, setToasts] = useState<{ id: string; message: string; type: 'success' | 'error' | 'info' }[]>([]);
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     const id = crypto.randomUUID();
@@ -199,7 +209,16 @@ export default function App() {
     }, 4000);
   };
   const [expandedTopics, setExpandedTopics] = useState<Record<string, boolean>>({});
-  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(() => {
+    try {
+      const local = localStorage.getItem('prompt_notepad_data');
+      if (local) {
+        const parsed = JSON.parse(local);
+        if (parsed.notes && parsed.notes.length > 0) return parsed.notes[0].id;
+      }
+    } catch (e) {}
+    return 'note-startup-root';
+  });
   const activeNote = useMemo(() => 
     data.notes.find(n => n.id === selectedNoteId) || null
   , [data.notes, selectedNoteId]);
@@ -1093,6 +1112,23 @@ export default function App() {
     };
   }, [isResizing, resize, stopResizing]);
 
+    // Shortcut Ctrl+S để lưu và kiểm tra quyền
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        if (isEditing) {
+          handleUpdateNote();
+        } else if (!isLoggedIn) {
+          showToast('Vui lòng đăng nhập để lưu kế hoạch!', 'error');
+          setIsLoginModalOpen(true);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isEditing, isLoggedIn, editNote, selectedNoteId, data]);
+
   const STORAGE_KEY = 'prompt_notepad_data';
 
   // Login states
@@ -1321,37 +1357,45 @@ export default function App() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // 1. Try LocalStorage first for immediate results
       const localData = localStorage.getItem(STORAGE_KEY);
       if (localData) {
         const parsed = JSON.parse(localData);
-        setData(parsed);
-        if (parsed.topics.length > 0) {
+        if (parsed.topics && parsed.topics.length > 0) {
+          setData(parsed);
           setExpandedTopics({ [parsed.topics[0].id]: true });
+          if (!selectedNoteId && parsed.notes && parsed.notes.length > 0) {
+            setSelectedNoteId(parsed.notes[0].id);
+          }
+          setIsLoading(false);
+          return;
         }
-        setIsLoading(false);
-        // We still fetch from backend to sync if needed, but local is priority
       }
 
-      // 2. Fetch from backend
-      const res = await fetch('/api/data');
-      if (res.ok) {
-        const json = await res.json();
-        // Only update if local storage was empty or if we want to merge (keeping it simple: backend wins if local is empty)
-        if (!localData && json.topics.length > 0) {
-          setData(json);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(json));
-          setExpandedTopics({ [json.topics[0].id]: true });
-        }
+      // Nạp mock data nếu chưa có dữ liệu trong storage
+      setData(INITIAL_MOCK_DATA);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_MOCK_DATA));
+      if (INITIAL_MOCK_DATA.topics.length > 0) {
+        setExpandedTopics({ [INITIAL_MOCK_DATA.topics[0].id]: true });
+      }
+      if (INITIAL_MOCK_DATA.notes.length > 0) {
+        setSelectedNoteId(INITIAL_MOCK_DATA.notes[0].id);
       }
     } catch (err) {
       console.error('Failed to fetch data', err);
+      setData(INITIAL_MOCK_DATA);
     } finally {
       setIsLoading(false);
     }
   };
 
   const saveData = async (newData: AppData) => {
+    if (!isLoggedIn) {
+      setData(newData); // Cập nhật state để người dùng thấy giao diện phản hồi
+      showToast('Vui lòng đăng nhập để lưu trữ kế hoạch của bạn!', 'error');
+      setIsLoginModalOpen(true);
+      return;
+    }
+
     // 1. Save to LocalStorage immediately (Synchronous & Reliable)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
     setData(newData);
@@ -1409,6 +1453,11 @@ export default function App() {
   };
 
   const handleUpdateNote = () => {
+    if (!isLoggedIn) {
+      showToast('Vui lòng đăng nhập để lưu kế hoạch!', 'error');
+      setIsLoginModalOpen(true);
+      return;
+    }
     const activeNote = data.notes.find(n => n.id === selectedNoteId);
     if (!activeNote) return;
     const updatedNote = { 
@@ -1422,6 +1471,7 @@ export default function App() {
     };
     saveData(newData);
     setIsEditing(false);
+    showToast('Đã lưu kế hoạch thành công!', 'success');
   };
 
   const handleDownload = () => {
@@ -1655,17 +1705,13 @@ export default function App() {
     );
   }
 
-  // Intro Showcase Route & Protected Access
-  if (location.pathname === '/' || location.pathname === '/intro' || !isLoggedIn) {
+  // Intro Showcase Route (Cho phép vào thẳng các tab để trải nghiệm tự do)
+  if (location.pathname === '/' || location.pathname === '/intro') {
     return (
       <>
         <IntroShowcase 
           onEnterApp={(targetTab = 'plans') => {
-            if (!isLoggedIn) {
-              setIsLoginModalOpen(true);
-            } else {
-              navigate(`/${targetTab}`);
-            }
+            navigate(`/${targetTab}`);
           }}
           onOpenLogin={() => setIsLoginModalOpen(true)}
           isLoggedIn={isLoggedIn}
@@ -1678,8 +1724,10 @@ export default function App() {
           onLoginSuccess={(user) => {
             setIsLoggedIn(true);
             setCurrentUser(user);
-            const nextPath = (location.pathname === '/' || location.pathname === '/intro') ? '/plans' : location.pathname;
-            navigate(nextPath);
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('currentUser', user);
+            showToast(`Chào mừng ${user}! Bạn đã đăng nhập thành công.`, 'success');
+            navigate('/plans');
           }}
         />
       </>
@@ -1687,7 +1735,27 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#F8F9FA]">
+    <div className="flex flex-col h-screen w-full overflow-hidden bg-[#F8F9FA] dark:bg-[#030712]">
+      {/* Guest Mode Notification Banner */}
+      {!isLoggedIn && (
+        <div className="bg-gradient-to-r from-amber-500/15 via-emerald-500/15 to-indigo-500/15 border-b border-amber-500/30 px-4 py-2 flex items-center justify-between text-xs text-slate-800 dark:text-slate-200 z-30 shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
+            <span>
+              Bạn đang ở chế độ <b>Trải nghiệm Khách (Guest)</b> với dữ liệu mẫu phong phú. Mọi thao tác lưu kế hoạch của riêng bạn cần đăng nhập.
+            </span>
+          </div>
+          <button
+            onClick={() => setIsLoginModalOpen(true)}
+            className="px-3.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer ml-3 shrink-0"
+          >
+            <LogIn className="w-3.5 h-3.5" />
+            <span>Đăng Nhập Để Lưu</span>
+          </button>
+        </div>
+      )}
+
+      <div className="flex flex-1 w-full overflow-hidden">
       {/* Hidden File Input for JSON Backup Import */}
       <input 
         type="file" 
@@ -1796,12 +1864,22 @@ export default function App() {
           </button>
 
           {/* User Profile Avatar */}
-          <div 
-            className="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-xs shadow-sm select-none"
-            title={`Tài khoản: ${currentUser}`}
-          >
-            {currentUser ? currentUser.slice(0, 2).toUpperCase() : 'XS'}
-          </div>
+          {isLoggedIn ? (
+            <div 
+              className="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-xs shadow-sm select-none"
+              title={`Tài khoản: ${currentUser}`}
+            >
+              {currentUser ? currentUser.slice(0, 2).toUpperCase() : 'XS'}
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsLoginModalOpen(true)}
+              className="w-9 h-9 rounded-full bg-slate-700 hover:bg-emerald-600 border border-white/20 flex items-center justify-center text-[10px] font-black text-amber-300 hover:text-white shadow-sm select-none cursor-pointer transition-all hover:scale-105"
+              title="Chưa đăng nhập (Khách) - Nhấn để đăng nhập"
+            >
+              GUEST
+            </button>
+          )}
           
           <button 
             onClick={handleExportJSON}
@@ -3614,8 +3692,13 @@ export default function App() {
         onLoginSuccess={(user) => {
           setIsLoggedIn(true);
           setCurrentUser(user);
+          localStorage.setItem('isLoggedIn', 'true');
+          localStorage.setItem('currentUser', user);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+          showToast(`Chào mừng ${user}! Kế hoạch của bạn đã được lưu trữ thành công.`, 'success');
         }}
       />
+      </div>
     </div>
   );
 }

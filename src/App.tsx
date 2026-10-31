@@ -1351,31 +1351,62 @@ export default function App() {
     }
   }, [isAiPanelOpen]);
 
+  const handleResetMockData = () => {
+    setData(INITIAL_MOCK_DATA);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_MOCK_DATA));
+    setExpandedTopics({
+      'topic-startup': true,
+      'topic-finance': true,
+      'topic-growth': true
+    });
+    setSelectedNoteId('note-startup-root');
+    setSelectedMindmapNoteId('note-startup-root');
+    showToast('Đã nạp đầy đủ Mock Data cho tất cả các mục (Kế hoạch, Mindmap 3D, Thống kê)!', 'success');
+  };
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
       const localData = localStorage.getItem(STORAGE_KEY);
       if (localData) {
-        const parsed = JSON.parse(localData);
-        if (parsed.topics && parsed.topics.length > 0) {
-          setData(parsed);
-          setExpandedTopics({ [parsed.topics[0].id]: true });
-          if (!selectedNoteId && parsed.notes && parsed.notes.length > 0) {
-            setSelectedNoteId(parsed.notes[0].id);
-          }
-          setIsLoading(false);
-          return;
+        let parsed = JSON.parse(localData);
+        // Tự động bù đắp dữ liệu mẫu nếu thiếu mindmapNodes hoặc thiếu topics/notes phong phú
+        if (!parsed.mindmapNodes || parsed.mindmapNodes.length === 0 || !parsed.topics || parsed.topics.length < 3) {
+          parsed = {
+            ...INITIAL_MOCK_DATA,
+            ...parsed,
+            topics: INITIAL_MOCK_DATA.topics,
+            notes: INITIAL_MOCK_DATA.notes,
+            mindmapNodes: INITIAL_MOCK_DATA.mindmapNodes
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
         }
+
+        setData(parsed);
+        setExpandedTopics({
+          [parsed.topics[0]?.id || 'topic-startup']: true,
+          'topic-finance': true,
+          'topic-growth': true
+        });
+        if (parsed.notes && parsed.notes.length > 0) {
+          setSelectedNoteId(parsed.notes[0].id);
+          setSelectedMindmapNoteId(parsed.notes[0].id);
+        }
+        setIsLoading(false);
+        return;
       }
 
-      // Nạp mock data nếu chưa có dữ liệu trong storage
+      // Nạp mock data hoàn chỉnh nếu chưa có dữ liệu trong storage
       setData(INITIAL_MOCK_DATA);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_MOCK_DATA));
-      if (INITIAL_MOCK_DATA.topics.length > 0) {
-        setExpandedTopics({ [INITIAL_MOCK_DATA.topics[0].id]: true });
-      }
+      setExpandedTopics({
+        'topic-startup': true,
+        'topic-finance': true,
+        'topic-growth': true
+      });
       if (INITIAL_MOCK_DATA.notes.length > 0) {
         setSelectedNoteId(INITIAL_MOCK_DATA.notes[0].id);
+        setSelectedMindmapNoteId(INITIAL_MOCK_DATA.notes[0].id);
       }
     } catch (err) {
       console.error('Failed to fetch data', err);
@@ -1756,16 +1787,26 @@ export default function App() {
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
             <span>
-              Bạn đang ở chế độ <b>Trải nghiệm Khách (Guest)</b> với dữ liệu mẫu phong phú. Mọi thao tác lưu kế hoạch của riêng bạn cần đăng nhập.
+              Bạn đang ở chế độ <b>Trải nghiệm Khách (Guest)</b> với đầy đủ Mock Data ở các mục (Kế hoạch, Mindmap 3D, Thống kê).
             </span>
           </div>
-          <button
-            onClick={() => setIsLoginModalOpen(true)}
-            className="px-3.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer ml-3 shrink-0"
-          >
-            <LogIn className="w-3.5 h-3.5" />
-            <span>Đăng Nhập Để Lưu</span>
-          </button>
+          <div className="flex items-center gap-2.5 ml-3 shrink-0">
+            <button
+              onClick={handleResetMockData}
+              className="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-black/10 dark:border-white/10 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              title="Khôi phục toàn bộ Mock Data mẫu ban đầu"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+              <span>Nạp Lại Mock Data</span>
+            </button>
+            <button
+              onClick={() => setIsLoginModalOpen(true)}
+              className="px-3.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Đăng Nhập Để Lưu</span>
+            </button>
+          </div>
         </div>
       )}
 

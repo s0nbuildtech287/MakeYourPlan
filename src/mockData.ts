@@ -1,4 +1,335 @@
-import { AppData } from './types';
+import { AppData, MindmapNode } from './types';
+
+export const INITIAL_MOCK_NODES: MindmapNode[] = [
+  // ================= 1. MINDMAP CHO NOTE "Lộ Trình Xây Dựng Hệ Sinh Thái AI Agent 2026" =================
+  {
+    id: 'm-root-startup',
+    text: '🚀 Lộ Trình Hệ Sinh Thái AI Agent 2026',
+    parentId: null,
+    x: 400,
+    y: 300,
+    type: 'root',
+    noteId: 'note-startup-root',
+    topicId: 'topic-startup',
+    priority: 1
+  },
+  // Nhánh Phải
+  {
+    id: 'm-start-1',
+    parentId: 'm-root-startup',
+    text: '1. Kiến Trúc Backend & Vector DB',
+    x: 680,
+    y: 170,
+    type: 'main',
+    noteId: 'note-startup-root',
+    topicId: 'topic-startup',
+    priority: 1,
+    isCompleted: true
+  },
+  {
+    id: 'm-start-1-1',
+    parentId: 'm-start-1',
+    text: 'PostgreSQL + pgvector Hybrid Search',
+    x: 940,
+    y: 130,
+    type: 'sub',
+    noteId: 'note-startup-root',
+    topicId: 'topic-startup',
+    priority: 1,
+    isCompleted: true
+  },
+  {
+    id: 'm-start-1-2',
+    parentId: 'm-start-1',
+    text: 'Redis Cache & Event Pub/Sub',
+    x: 940,
+    y: 200,
+    type: 'sub',
+    noteId: 'note-startup-root',
+    topicId: 'topic-startup',
+    priority: 2,
+    isCompleted: true
+  },
+  {
+    id: 'm-start-2',
+    parentId: 'm-root-startup',
+    text: '2. Giao Diện 3D & Web Canvas',
+    x: 680,
+    y: 320,
+    type: 'main',
+    noteId: 'note-startup-root',
+    topicId: 'topic-startup',
+    priority: 2,
+    isCompleted: true
+  },
+  {
+    id: 'm-start-2-1',
+    parentId: 'm-start-2',
+    text: 'Glassmorphism Cyber Theme & Parallax',
+    x: 940,
+    y: 290,
+    type: 'sub',
+    noteId: 'note-startup-root',
+    topicId: 'topic-startup',
+    priority: 1,
+    isCompleted: true
+  },
+  {
+    id: 'm-start-2-2',
+    parentId: 'm-start-2',
+    text: 'Auto-Layout 2 Bên Cân Bằng Đối Xứng',
+    x: 940,
+    y: 360,
+    type: 'sub',
+    noteId: 'note-startup-root',
+    topicId: 'topic-startup',
+    priority: 2,
+    isCompleted: true
+  },
+  {
+    id: 'm-start-3',
+    parentId: 'm-root-startup',
+    text: '3. Trợ Lý AI Gemini Pro 1-Click',
+    x: 680,
+    y: 470,
+    type: 'main',
+    noteId: 'note-startup-root',
+    topicId: 'topic-startup',
+    priority: 3,
+    isCompleted: false
+  },
+  {
+    id: 'm-start-3-1',
+    parentId: 'm-start-3',
+    text: 'Tự Động Bóc Tách Milestone & Checklist',
+    x: 940,
+    y: 440,
+    type: 'sub',
+    noteId: 'note-startup-root',
+    topicId: 'topic-startup',
+    priority: 1,
+    isCompleted: true
+  },
+  {
+    id: 'm-start-3-2',
+    parentId: 'm-start-3',
+    text: 'Tạo Nhánh Tư Duy Mindmap Thông Minh',
+    x: 940,
+    y: 510,
+    type: 'sub',
+    noteId: 'note-startup-root',
+    topicId: 'topic-startup',
+    priority: 2,
+    isCompleted: false
+  },
+  // Nhánh Trái (Đối xứng)
+  {
+    id: 'm-start-4',
+    parentId: 'm-root-startup',
+    text: '4. Hạ Tầng Kubernetes & CI/CD',
+    x: 120,
+    y: 200,
+    type: 'main',
+    noteId: 'note-startup-root',
+    topicId: 'topic-startup',
+    priority: 4,
+    isCompleted: true
+  },
+  {
+    id: 'm-start-4-1',
+    parentId: 'm-start-4',
+    text: 'Docker Multi-stage Build Tối Ưu',
+    x: -140,
+    y: 160,
+    type: 'sub',
+    noteId: 'note-startup-root',
+    topicId: 'topic-startup',
+    priority: 1,
+    isCompleted: true
+  },
+  {
+    id: 'm-start-4-2',
+    parentId: 'm-start-4',
+    text: 'GitHub Actions Tự Động Triển Khai',
+    x: -140,
+    y: 230,
+    type: 'sub',
+    noteId: 'note-startup-root',
+    topicId: 'topic-startup',
+    priority: 2,
+    isCompleted: true
+  },
+  {
+    id: 'm-start-5',
+    parentId: 'm-root-startup',
+    text: '5. Ra Mắt & Tăng Trưởng Toàn Cầu',
+    x: 120,
+    y: 380,
+    type: 'main',
+    noteId: 'note-startup-root',
+    topicId: 'topic-startup',
+    priority: 5,
+    isCompleted: false
+  },
+  {
+    id: 'm-start-5-1',
+    parentId: 'm-start-5',
+    text: 'Chương Trình Beta 1,000 Người Dùng',
+    x: -140,
+    y: 340,
+    type: 'sub',
+    noteId: 'note-startup-root',
+    topicId: 'topic-startup',
+    priority: 1,
+    isCompleted: false
+  },
+  {
+    id: 'm-start-5-2',
+    parentId: 'm-start-5',
+    text: 'Hợp Tác Cộng Đồng Lập Trình & Tài Chính',
+    x: -140,
+    y: 420,
+    type: 'sub',
+    noteId: 'note-startup-root',
+    topicId: 'topic-startup',
+    priority: 2,
+    isCompleted: false
+  },
+
+  // ================= 2. MINDMAP CHO NOTE "Chiến Lược Quản Lý Tài Sản & Đầu Tư 2026" =================
+  {
+    id: 'm-root-fin',
+    text: '💰 Quản Trị Danh Mục Tài Sản 2026',
+    parentId: null,
+    x: 400,
+    y: 300,
+    type: 'root',
+    noteId: 'note-finance-root',
+    topicId: 'topic-finance',
+    priority: 1
+  },
+  {
+    id: 'm-fin-1',
+    parentId: 'm-root-fin',
+    text: '1. Cổ Phiếu Tăng Trưởng & VN30 (50%)',
+    x: 680,
+    y: 190,
+    type: 'main',
+    noteId: 'note-finance-root',
+    topicId: 'topic-finance',
+    priority: 1,
+    isCompleted: true
+  },
+  {
+    id: 'm-fin-1-1',
+    parentId: 'm-fin-1',
+    text: 'Nhóm Ngân Hàng & Bán Lẻ Đầu Ngành',
+    x: 940,
+    y: 150,
+    type: 'sub',
+    noteId: 'note-finance-root',
+    topicId: 'topic-finance',
+    priority: 1,
+    isCompleted: true
+  },
+  {
+    id: 'm-fin-1-2',
+    parentId: 'm-fin-1',
+    text: 'Cổ Tức Tiền Mặt Đều Đặn Hàng Năm',
+    x: 940,
+    y: 220,
+    type: 'sub',
+    noteId: 'note-finance-root',
+    topicId: 'topic-finance',
+    priority: 2,
+    isCompleted: true
+  },
+  {
+    id: 'm-fin-2',
+    parentId: 'm-root-fin',
+    text: '2. Giao Dịch Thuật Toán Quant (20%)',
+    x: 680,
+    y: 380,
+    type: 'main',
+    noteId: 'note-finance-root',
+    topicId: 'topic-finance',
+    priority: 2,
+    isCompleted: true
+  },
+  {
+    id: 'm-fin-3',
+    parentId: 'm-root-fin',
+    text: '3. Bất Động Sản Dòng Tiền (15%)',
+    x: 120,
+    y: 210,
+    type: 'main',
+    noteId: 'note-finance-root',
+    topicId: 'topic-finance',
+    priority: 3,
+    isCompleted: false
+  },
+  {
+    id: 'm-fin-4',
+    parentId: 'm-root-fin',
+    text: '4. Quỹ Khẩn Cấp & Vàng (15%)',
+    x: 120,
+    y: 370,
+    type: 'main',
+    noteId: 'note-finance-root',
+    topicId: 'topic-finance',
+    priority: 4,
+    isCompleted: true
+  },
+
+  // ================= 3. MINDMAP CHO NOTE "Lộ Trình Trở Thành Solutions Architect" =================
+  {
+    id: 'm-root-grow',
+    text: '🎓 Solutions Architect Mastery 2026',
+    parentId: null,
+    x: 400,
+    y: 300,
+    type: 'root',
+    noteId: 'note-growth-root',
+    topicId: 'topic-growth',
+    priority: 1
+  },
+  {
+    id: 'm-grow-1',
+    parentId: 'm-root-grow',
+    text: '1. Kiến Trúc Phân Tán (Distributed Systems)',
+    x: 680,
+    y: 200,
+    type: 'main',
+    noteId: 'note-growth-root',
+    topicId: 'topic-growth',
+    priority: 1,
+    isCompleted: true
+  },
+  {
+    id: 'm-grow-2',
+    parentId: 'm-root-grow',
+    text: '2. Chứng Chỉ AWS Solutions Architect Pro',
+    x: 680,
+    y: 360,
+    type: 'main',
+    noteId: 'note-growth-root',
+    topicId: 'topic-growth',
+    priority: 2,
+    isCompleted: false
+  },
+  {
+    id: 'm-grow-3',
+    parentId: 'm-root-grow',
+    text: '3. Rèn Luyện Thể Chất & Đọc 50 Đầu Sách',
+    x: 120,
+    y: 280,
+    type: 'main',
+    noteId: 'note-growth-root',
+    topicId: 'topic-growth',
+    priority: 3,
+    isCompleted: true
+  }
+];
 
 export const INITIAL_MOCK_DATA: AppData = {
   topics: [
@@ -172,6 +503,6 @@ export const INITIAL_MOCK_DATA: AppData = {
 - [ ] Duy trì giấc ngủ đủ 7 tiếng mỗi ngày
 - [ ] Thực hành thiền định tĩnh tâm 15 phút mỗi tối`
     }
-  ]
+  ],
+  mindmapNodes: INITIAL_MOCK_NODES
 };
-

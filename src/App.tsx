@@ -188,12 +188,22 @@ export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('isLoggedIn') === 'true');
-  const [currentUser, setCurrentUser] = useState(() => localStorage.getItem('currentUser') || 'xu4ns0n');
+  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('yourplan_is_logged_in') === 'true');
+  const [currentUser, setCurrentUser] = useState(() => localStorage.getItem('yourplan_current_user') || '');
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  // Cleanup legacy auth cache to prevent auto-login to xu4ns0n
+  useEffect(() => {
+    if (localStorage.getItem('isLoggedIn') !== null) {
+      localStorage.removeItem('isLoggedIn');
+    }
+    if (localStorage.getItem('currentUser') === 'xu4ns0n') {
+      localStorage.removeItem('currentUser');
+    }
+  }, []);
+
 
   const [data, setData] = useState<AppData>(() => {
     try {
@@ -1227,11 +1237,15 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('yourplan_is_logged_in');
+    localStorage.removeItem('yourplan_current_user');
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('currentUser');
     setIsLoggedIn(false);
+    setCurrentUser('');
     setLoginUsername('');
     setLoginPassword('');
+    showToast('Đã đăng xuất khỏi tài khoản.', 'info');
     navigate('/intro');
   };
 
@@ -1724,8 +1738,8 @@ export default function App() {
           onLoginSuccess={(user) => {
             setIsLoggedIn(true);
             setCurrentUser(user);
-            localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('currentUser', user);
+            localStorage.setItem('yourplan_is_logged_in', 'true');
+            localStorage.setItem('yourplan_current_user', user);
             showToast(`Chào mừng ${user}! Bạn đã đăng nhập thành công.`, 'success');
             navigate('/plans');
           }}
@@ -3692,8 +3706,8 @@ export default function App() {
         onLoginSuccess={(user) => {
           setIsLoggedIn(true);
           setCurrentUser(user);
-          localStorage.setItem('isLoggedIn', 'true');
-          localStorage.setItem('currentUser', user);
+          localStorage.setItem('yourplan_is_logged_in', 'true');
+          localStorage.setItem('yourplan_current_user', user);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
           showToast(`Chào mừng ${user}! Kế hoạch của bạn đã được lưu trữ thành công.`, 'success');
         }}

@@ -44,8 +44,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ isOpen, onClose, onLoginSu
   if (!isOpen) return null;
 
   const executeLogin = (userToLogin: string) => {
-    localStorage.setItem('isLoggedIn', 'true');
-    localStorage.setItem('currentUser', userToLogin);
+    localStorage.setItem('yourplan_is_logged_in', 'true');
+    localStorage.setItem('yourplan_current_user', userToLogin);
+    // Dọn dẹp key cũ nếu có
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('currentUser');
     onLoginSuccess(userToLogin);
     onClose();
   };

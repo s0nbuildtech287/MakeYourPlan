@@ -157,7 +157,7 @@ export const IntroShowcase: React.FC<IntroShowcaseProps> = ({
   onEnterApp,
   onOpenLogin,
   isLoggedIn,
-  currentUser = 'xu4ns0n'
+  currentUser = ''
 }) => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 

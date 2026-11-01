@@ -7,7 +7,7 @@ import { AppData } from '../types';
 
 const JAVA_BACKEND_URL = (import.meta as any).env?.VITE_BACKEND_URL || 'http://localhost:8080/api/data';
 const LOCAL_PROXY_URL = '/api/data';
-const SHEET_API_URL = (import.meta as any).env?.VITE_SHEET_API_URL || '';
+const SHEET_API_URL = (import.meta as any).env?.VITE_SHEET_API_URL || 'https://script.google.com/macros/s/AKfycbzeijysS1dISUr6uCwX1sO9ZQ3u2Slyeek8Pv5_bqT_xP5FFZf3WS7sbGFIaiyQ8pYTrQ/exec';
 
 async function fetchFromUrl(url: string, timeoutMs = 1200): Promise<AppData | null> {
   try {

@@ -13,3 +13,4 @@ java -version
 
 Set-Location $PSScriptRoot
 ./gradlew.bat bootRun
+
